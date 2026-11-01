@@ -1,9 +1,8 @@
 from pathlib import Path
-
+import shap
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
-
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
@@ -128,6 +127,10 @@ def perform_eda(df):
     """Gera estatísticas e visualizações exploratórias."""
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+    # Cópia só para os gráficos, com o diagnóstico em texto
+    df_plot = df.copy()
+    df_plot["Diagnóstico"] = df_plot["diagnosis"].map({0: "Benigno", 1: "Maligno"})
 
     print("\n" + "=" * 60)
     print("ANÁLISE EXPLORATÓRIA DOS DADOS")
@@ -551,6 +554,171 @@ def analyze_feature_importance(model, feature_names):
     )
 
 
+
+# ============================================================
+# 8. EXPLICABILIDADE DO MODELO — SHAP
+# ============================================================
+
+def analyze_with_shap(model, X_train, X_test):
+    """
+    Gera explicações globais e individuais para o modelo selecionado.
+
+    A explicação utiliza o modelo já treinado. O conjunto de treino
+    fornece os dados de referência, e uma observação do teste é
+    utilizada para a explicação individual.
+    """
+
+    print("\n" + "=" * 60)
+    print("EXPLICABILIDADE DO MODELO — SHAP")
+    print("=" * 60)
+
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+    classifier = model.named_steps.get("modelo")
+
+    if isinstance(classifier, LogisticRegression):
+        scaler = model.named_steps.get("scaler")
+
+        if scaler is None:
+            raise ValueError(
+                "O pipeline da Regressão Logística não possui scaler."
+            )
+
+        X_train_transformed = scaler.transform(X_train)
+        X_test_transformed = scaler.transform(X_test)
+
+        background = shap.sample(
+            X_train_transformed,
+            min(100, len(X_train_transformed)),
+            random_state=RANDOM_STATE,
+        )
+
+        explainer = shap.LinearExplainer(classifier, background)
+
+        raw_values = explainer(X_test_transformed)
+
+        # Os valores SHAP representam contribuições para a saída
+        # do classificador, em escala de log-odds.
+        shap_values = raw_values.values
+
+        if shap_values.ndim == 3:
+            shap_values = shap_values[:, :, 1]
+
+        base_values = raw_values.base_values
+
+        if getattr(base_values, "ndim", 0) == 2:
+            base_values = base_values[:, 1]
+
+        elif getattr(base_values, "ndim", 0) == 0:
+            base_values = float(base_values)
+
+        feature_values = X_test.to_numpy()
+
+    elif isinstance(classifier, RandomForestClassifier):
+        explainer = shap.TreeExplainer(classifier)
+        raw_values = explainer(X_test)
+
+        shap_values = raw_values.values
+
+        # Em classificadores binários, seleciona a classe maligna (1).
+        if shap_values.ndim == 3:
+            shap_values = shap_values[:, :, 1]
+
+        base_values = raw_values.base_values
+
+        if getattr(base_values, "ndim", 0) == 2:
+            base_values = base_values[:, 1]
+
+        elif getattr(base_values, "ndim", 0) == 0:
+            base_values = float(base_values)
+
+        feature_values = X_test.to_numpy()
+
+    else:
+        raise TypeError(
+            "Tipo de modelo não suportado para SHAP: "
+            f"{type(classifier).__name__}"
+        )
+
+    # Normaliza os valores-base para a explicação individual.
+    if getattr(base_values, "ndim", 0) == 1:
+        individual_base_value = base_values[0]
+    else:
+        individual_base_value = base_values
+
+    explanation = shap.Explanation(
+        values=shap_values,
+        base_values=base_values,
+        data=feature_values,
+        feature_names=list(X_test.columns),
+    )
+
+    # Explicação global: importância média absoluta de cada variável.
+    plt.figure(figsize=(11, 8))
+
+    shap.summary_plot(
+        shap_values,
+        X_test,
+        feature_names=list(X_test.columns),
+        max_display=15,
+        show=False,
+    )
+
+    plt.title("SHAP — importância global das variáveis")
+    plt.tight_layout()
+
+    plt.savefig(
+        OUTPUT_DIR / "shap_summary.png",
+        dpi=300,
+        bbox_inches="tight",
+    )
+    plt.close()
+
+    # Explicação individual: primeira observação do conjunto de teste.
+    individual_explanation = shap.Explanation(
+        values=shap_values[0],
+        base_values=individual_base_value,
+        data=feature_values[0],
+        feature_names=list(X_test.columns),
+    )
+
+    shap.plots.waterfall(
+        individual_explanation,
+        max_display=12,
+        show=False,
+    )
+
+    plt.gcf().set_size_inches(11, 8)
+    plt.tight_layout()
+
+    plt.savefig(
+        OUTPUT_DIR / "shap_individual.png",
+        dpi=300,
+        bbox_inches="tight",
+    )
+    plt.close()
+
+    # Exporta os valores SHAP para análise complementar.
+    shap_importance = pd.Series(
+        abs(shap_values).mean(axis=0),
+        index=X_test.columns,
+        name="SHAP médio absoluto",
+    ).sort_values(ascending=False)
+
+    shap_importance.to_csv(
+        OUTPUT_DIR / "shap_importance.csv",
+        header=True,
+        index_label="Variável",
+    )
+
+    print("\nTop 10 variáveis por SHAP médio absoluto:")
+    print(shap_importance.head(10).round(6))
+
+    print(f"\nGráfico global: {OUTPUT_DIR / 'shap_summary.png'}")
+    print(f"Gráfico individual: {OUTPUT_DIR / 'shap_individual.png'}")
+    print(f"Valores SHAP: {OUTPUT_DIR / 'shap_importance.csv'}")
+
+
 # ============================================================
 # 8. EXECUÇÃO PRINCIPAL
 # ============================================================
@@ -593,6 +761,13 @@ def main():
     analyze_feature_importance(
         models["Random Forest"],
         X_train.columns,
+    )
+
+    # SHAP: explica o modelo que foi efetivamente selecionado.
+    analyze_with_shap(
+        best_model,
+        X_train,
+        X_test,
     )
 
     print("\n" + "=" * 60)

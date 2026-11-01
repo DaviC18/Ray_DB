@@ -1,1 +1,19 @@
-.venv
+# Ambiente virtual
+.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Testes e cobertura
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Configurações locais de IDE
+.idea/
+.vscode/
+
+# Arquivos do sistema
+.DS_Store
