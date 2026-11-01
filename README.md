@@ -1,252 +1,252 @@
-# Rain_DB — Análise de Dados e Machine Learning para Diagnóstico de Câncer de Mama
+# Tech Challenge — Fase 1: Diagnóstico de Câncer de Mama com Machine Learning
 
-Projeto acadêmico de análise exploratória de dados e classificação com Machine Learning, desenvolvido como parte dos estudos de Ciência de Dados e Inteligência Artificial.
+Projeto desenvolvido para o Tech Challenge da Fase 1 da PÓS TECH.
 
-O objetivo é investigar características de tumores mamários e avaliar modelos de classificação capazes de distinguir amostras benignas de malignas a partir do dataset Breast Cancer Wisconsin Diagnostic.
+O objetivo é construir a base de um sistema de **apoio ao diagnóstico** para um hospital universitário: a partir de medidas extraídas de exames de imagem de tumores de mama, um modelo de Machine Learning classifica o tumor como **benigno** ou **maligno**, destacando as informações que mais pesaram na decisão.
 
-> **Aviso:** este projeto tem finalidade exclusivamente acadêmica e educacional. Os modelos não constituem ferramentas médicas validadas e não devem ser utilizados para diagnóstico, tratamento ou decisões clínicas.
+> ⚠️ Este sistema é uma ferramenta de **suporte** à decisão clínica. Ele não substitui o médico, que sempre tem a palavra final no diagnóstico.
 
-## Objetivos
+---
 
-- Realizar análise exploratória e estatística de dados médicos.
-- Identificar correlações entre características e diagnóstico.
-- Visualizar distribuições e diferenças entre as classes.
-- Treinar e comparar algoritmos de classificação.
-- Avaliar os modelos com métricas de classificação e matriz de confusão.
-- Investigar a importância das características utilizadas pelo Random Forest.
+## Sumário
 
-## Tecnologias utilizadas
+- [Dataset](#dataset)
+- [Estrutura do projeto](#estrutura-do-projeto)
+- [Como executar](#como-executar)
+- [Fluxo do pipeline](#fluxo-do-pipeline)
+- [Resultados](#resultados)
+- [Interpretação do modelo](#interpretação-do-modelo)
+- [Limitações e uso na prática](#limitações-e-uso-na-prática)
+- [Entregáveis](#entregáveis)
+- [Autores](#autores)
 
-- **Python** — linguagem de programação.
-- **Pandas** — manipulação e análise de dados.
-- **Matplotlib** — criação de gráficos.
-- **Seaborn** — visualização estatística.
-- **Scikit-learn** — pré-processamento, treinamento e avaliação dos modelos.
+---
 
 ## Dataset
 
-O projeto utiliza o **Breast Cancer Wisconsin Diagnostic (WDBC)**, um conjunto de dados com características numéricas extraídas de imagens digitalizadas de amostras de tecido mamário.
+**Breast Cancer Wisconsin (Diagnostic)**
+Fonte: [Kaggle — uciml/breast-cancer-wisconsin-data](https://www.kaggle.com/datasets/uciml/breast-cancer-wisconsin-data/data)
 
-Fonte de referência: [UCI Machine Learning Repository — Breast Cancer Wisconsin (Diagnostic)](https://archive.ics.uci.edu/dataset/17/breast+cancer+wisconsin+diagnostic).
+| Característica | Valor |
+|---|---|
+| Registros (pacientes) | 569 |
+| Variáveis preditoras | 30 (numéricas) |
+| Variável alvo | `diagnosis` — B (benigno) / M (maligno) |
+| Benignos | 357 (62,7%) |
+| Malignos | 212 (37,3%) |
+| Valores ausentes | Nenhum (exceto a coluna vazia `Unnamed: 32`, removida) |
 
-### Características do conjunto de dados
+As 30 variáveis descrevem os núcleos celulares de uma imagem digitalizada de punção aspirativa por agulha fina (PAAF). São 10 medidas (raio, textura, perímetro, área, suavidade, compacidade, concavidade, pontos côncavos, simetria e dimensão fractal), cada uma em três versões:
 
-- **569 registros**.
-- **30 características preditoras** após a limpeza.
-- **357 amostras benignas**.
-- **212 amostras malignas**.
-- Variável-alvo: `diagnosis`.
+- `_mean`: valor médio;
+- `_se`: erro padrão;
+- `_worst`: média dos três maiores valores.
 
-As classes são codificadas da seguinte maneira:
+O arquivo já está incluído no repositório em `data/data.csv`. Caso precise baixá-lo novamente, salve-o nesse mesmo caminho.
 
-| Valor original | Valor utilizado | Significado |
-|---|---:|---|
-| `B` | `0` | Benigno |
-| `M` | `1` | Maligno |
-
-As colunas `id` e `Unnamed: 32` são removidas durante o pré-processamento. A segunda contém apenas valores ausentes no arquivo utilizado.
-
-## Funcionalidades implementadas
-
-### 1. Análise exploratória de dados (EDA)
-
-O projeto realiza:
-
-- Verificação das dimensões do dataset e dos tipos de dados.
-- Identificação de valores ausentes.
-- Estatísticas descritivas.
-- Contagem de amostras por diagnóstico.
-- Análise de correlação entre as características e a variável-alvo.
-
-### 2. Visualização dos dados
-
-O script gera os seguintes gráficos:
-
-- `correlacao_diagnostico.png` — correlação das características com o diagnóstico.
-- `radius_mean_diagnostico.png` — distribuição de `radius_mean` por classe.
-- `concave_points_mean_diagnostico.png` — distribuição de `concave points_mean` por classe.
-- `boxplot_radius_mean.png` — comparação de `radius_mean` entre os diagnósticos.
-- `feature_importance.png` — dez características mais importantes para o Random Forest.
-
-Os arquivos são gerados durante a execução do script.
-
-### 3. Pré-processamento
-
-O pré-processamento inclui:
-
-- Remoção de colunas sem utilidade preditiva para o experimento.
-- Codificação da variável-alvo.
-- Separação dos dados em treino, validação e teste.
-- Padronização das características dentro do pipeline da Regressão Logística.
-
-A divisão utiliza amostragem estratificada e `random_state=42` para tornar o experimento reproduzível nas mesmas condições.
-
-### 4. Modelos de Machine Learning
-
-Foram implementados dois classificadores:
-
-**Regressão Logística**
-
-Utiliza `StandardScaler` para padronizar as características antes do treinamento. O modelo é avaliado considerando seu desempenho na identificação da classe maligna.
-
-**Random Forest**
-
-Utiliza um conjunto de árvores de decisão, configurado com 200 estimadores, para realizar a classificação e investigar a importância relativa das características.
-
-### 5. Avaliação dos modelos
-
-Os modelos são comparados pelo recall da classe maligna no conjunto de validação. O modelo com maior recall é selecionado para a avaliação final no conjunto de teste.
-
-As métricas utilizadas incluem:
-
-- Acurácia (*accuracy*).
-- Precisão (*precision*).
-- Sensibilidade (*recall*).
-- F1-score.
-- Matriz de confusão.
-
-## Resultados experimentais
-
-Na execução registrada, a Regressão Logística foi selecionada com base no recall da validação.
-
-| Métrica no conjunto de teste | Resultado |
-|---|---:|
-| Acurácia | 97,37% |
-| Precisão — classe maligna | 97,56% |
-| Recall — classe maligna | 95,24% |
-| F1-score — classe maligna | 96,39% |
-| Amostras de teste | 114 |
-
-### Matriz de confusão
-
-| Diagnóstico real | Previsto benigno | Previsto maligno |
-|---|---:|---:|
-| Benigno | 71 | 1 |
-| Maligno | 2 | 40 |
-
-O modelo classificou corretamente 111 das 114 amostras do conjunto de teste. Entretanto, dois casos malignos foram classificados como benignos e um caso benigno foi classificado como maligno.
-
-Esses erros demonstram a importância de analisar as métricas por classe, em vez de avaliar o desempenho apenas pela acurácia.
-
-**Importante:** os resultados correspondem a uma única divisão do dataset. Eles não demonstram desempenho clínico nem garantem resultados equivalentes em outras amostras ou populações.
-
-## Importância das características
-
-A análise do Random Forest identificou as seguintes características como as dez mais importantes na execução registrada:
-
-| Característica | Importância |
-|---|---:|
-| `perimeter_worst` | 15,63% |
-| `concave points_worst` | 11,85% |
-| `area_worst` | 11,04% |
-| `concave points_mean` | 10,61% |
-| `radius_mean` | 6,47% |
-| `radius_worst` | 5,98% |
-| `perimeter_mean` | 5,34% |
-| `concavity_mean` | 4,80% |
-| `area_mean` | 3,99% |
-| `concavity_worst` | 3,79% |
-
-As quatro primeiras características representam aproximadamente 44,12% da importância total atribuída pelo Random Forest.
-
-Esses valores indicam a importância relativa das variáveis nas divisões das árvores do modelo. Não representam causalidade nem devem ser interpretados como explicações diretas das previsões da Regressão Logística.
+---
 
 ## Estrutura do projeto
 
-```text
-Rain_DB/
+```
+.
 ├── data/
-│   └── data.csv
-├── main.py
-├── .gitignore
-├── README.md
-├── correlacao_diagnostico.png
-├── radius_mean_diagnostico.png
-├── concave_points_mean_diagnostico.png
-├── boxplot_radius_mean.png
-└── feature_importance.png
+│   └── data.csv            # Dataset
+├── outputs/                # Gráficos e resultados gerados pela execução
+├── main.py                 # Pipeline completo (EDA → modelagem → avaliação → SHAP)
+├── requirements.txt        # Dependências Python
+├── Dockerfile              # Imagem para execução em container
+├── .dockerignore
+└── README.md
 ```
 
-Os arquivos PNG são resultados gerados pelo script. A estrutura acima representa a organização esperada do projeto; a presença de cada imagem na raiz depende de sua geração e de ela ter sido incluída no repositório.
+---
 
-## Como executar o projeto
+## Como executar
 
-### Pré-requisitos
+### Opção 1 — Docker (recomendado)
 
-- Python 3.12 ou versão compatível com as bibliotecas utilizadas.
-- Git.
-- Dataset disponível no caminho `data/data.csv`.
-
-### 1. Clonar o repositório
+Pré-requisito: [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalado e em execução.
 
 ```bash
-git clone https://github.com/DaviC18/Rain_DB.git
-cd Rain_DB
+# 1. Construir a imagem
+docker build -t tech-challenge .
+
+# 2. Executar o pipeline (os gráficos serão salvos na pasta outputs/ local)
+docker run --rm -v "${PWD}/outputs:/app/outputs" tech-challenge
 ```
 
-### 2. Criar e ativar um ambiente virtual
+> No Prompt de Comando (cmd) do Windows, troque `${PWD}` por `%cd%`.
 
-No Linux:
+### Opção 2 — Ambiente local
+
+Pré-requisito: Python 3.14.
 
 ```bash
-python3 -m venv .venv
+# 1. Criar e ativar o ambiente virtual
+python -m venv .venv
+
+# Windows (PowerShell)
+.venv\Scripts\Activate.ps1
+# Linux / macOS
 source .venv/bin/activate
-```
 
-### 3. Instalar as dependências
+# 2. Instalar as dependências
+pip install -r requirements.txt
 
-```bash
-python -m pip install --upgrade pip
-python -m pip install pandas matplotlib seaborn scikit-learn
-```
-
-### 4. Verificar o dataset
-
-Confirme que o arquivo está no caminho:
-
-```text
-data/data.csv
-```
-
-O arquivo deve conter as características do dataset WDBC e a coluna `diagnosis`.
-
-### 5. Executar o projeto
-
-```bash
+# 3. Executar
 python main.py
 ```
 
-O script realizará a análise exploratória, gerará os gráficos, treinará os modelos, comparará o recall na validação e exibirá as métricas da avaliação final.
+A execução imprime no terminal as estatísticas, as métricas dos modelos e as variáveis mais importantes. Os gráficos são salvos em `outputs/`.
 
-Os gráficos serão salvos no diretório de trabalho da execução.
+---
 
-## Limitações e considerações
+## Fluxo do pipeline
 
-- O projeto utiliza um dataset relativamente pequeno e específico.
-- A avaliação apresentada utiliza uma única divisão entre treino, validação e teste.
-- O recall da classe maligna é priorizado na seleção do modelo, mas não representa, isoladamente, segurança clínica.
-- A importância das características do Random Forest não estabelece relações causais.
-- Não foi realizada validação clínica, externa ou prospectiva.
-- O projeto é experimental e não substitui profissionais de saúde nem procedimentos diagnósticos validados.
+### 1. Carregamento e limpeza
+- Leitura de `data/data.csv`.
+- Remoção das colunas `id` (identificador, sem valor preditivo) e `Unnamed: 32` (totalmente vazia).
+- Validação da coluna alvo e codificação: **B → 0** (benigno), **M → 1** (maligno).
 
-## Possíveis melhorias futuras
+### 2. Análise exploratória (EDA)
+- Estatísticas descritivas de todas as variáveis.
+- Correlação de cada variável com o diagnóstico.
+- Histogramas e boxplot comparando benignos e malignos.
 
-- Implementar validação cruzada estratificada.
-- Avaliar curvas ROC e Precision-Recall.
-- Investigar diferentes limiares de classificação.
-- Aplicar SHAP para complementar a interpretabilidade.
-- Comparar os coeficientes da Regressão Logística após a padronização.
-- Organizar as dependências em um arquivo `requirements.txt`.
-- Adicionar testes automatizados e melhorar a configuração do caminho do dataset.
-- Documentar a análise crítica e os resultados em um relatório técnico.
+### 3. Separação dos dados
+Divisão estratificada, que mantém a proporção de benignos e malignos em cada conjunto:
 
-## Contexto acadêmico
+| Conjunto | Proporção | Registros | Uso |
+|---|---|---|---|
+| Treino | 60% | 341 | Ajuste dos modelos |
+| Validação | 20% | 114 | Comparação e escolha do melhor modelo |
+| Teste | 20% | 114 | Avaliação final (usado uma única vez) |
 
-Projeto desenvolvido para fins de aprendizado em análise de dados, estatística aplicada e Machine Learning, com foco em classificação supervisionada e interpretação de resultados.
+### 4. Modelagem
+Dois modelos, cada um em um `Pipeline` do scikit-learn:
 
-## Autor
+| Modelo | Pré-processamento | Por que foi escolhido |
+|---|---|---|
+| **Regressão Logística** | `StandardScaler` | Modelo linear, simples e interpretável; sensível à escala, por isso a padronização |
+| **Random Forest** (200 árvores) | Nenhum | Captura relações não lineares; não depende da escala das variáveis |
 
-**Davi Valério Rocha de Souza Curty**
+O `StandardScaler` fica dentro do pipeline, então é ajustado **somente com os dados de treino**. Isso evita vazamento de informação para a validação e o teste.
 
-- GitHub: [@DaviC18](https://github.com/DaviC18)
-- Repositório: [Rain_DB](https://github.com/DaviC18/Rain_DB)
+### 5. Seleção do modelo
+O critério é o **recall da classe maligna** no conjunto de validação.
+
+Em diagnóstico de câncer, o erro mais grave é o **falso negativo**: classificar um tumor maligno como benigno, o que pode atrasar o tratamento. O recall mede exatamente a proporção de casos malignos que o modelo consegue identificar.
+
+### 6. Avaliação e interpretação
+- Métricas no conjunto de teste: acurácia, precisão, recall e F1-score.
+- Matriz de confusão.
+- Importância das variáveis (Random Forest).
+- Valores SHAP do modelo selecionado: explicação global e explicação de um paciente individual.
+
+---
+
+## Resultados
+
+### Comparação na validação
+
+| Modelo | Recall (maligno) |
+|---|---|
+| **Regressão Logística** | **0,9767** |
+| Random Forest | 0,9535 |
+
+➡️ Modelo selecionado: **Regressão Logística**
+
+### Desempenho final no teste
+
+| Métrica | Valor |
+|---|---|
+| Acurácia | **97,37%** |
+| Precisão (maligno) | 97,56% |
+| Recall (maligno) | **95,24%** |
+| F1-score (maligno) | 96,39% |
+
+### Matriz de confusão (teste)
+
+|  | Previsto benigno | Previsto maligno |
+|---|---|---|
+| **Real benigno** | 71 | 1 |
+| **Real maligno** | 2 | 40 |
+
+Dos 42 tumores malignos do conjunto de teste, o modelo identificou 40. Houve **2 falsos negativos** e **1 falso positivo**.
+
+![Matriz de confusão](outputs/matriz_confusao.png)
+
+### Variáveis mais correlacionadas com o diagnóstico
+
+| Variável | Correlação |
+|---|---|
+| concave points_worst | 0,794 |
+| perimeter_worst | 0,783 |
+| concave points_mean | 0,777 |
+| radius_worst | 0,777 |
+| perimeter_mean | 0,743 |
+
+![Correlação com o diagnóstico](outputs/correlacao_diagnostico.png)
+
+![Distribuição de radius_mean](outputs/radius_mean_diagnostico.png)
+
+---
+
+## Interpretação do modelo
+
+### Importância das variáveis — Random Forest
+
+![Feature importance](outputs/feature_importance.png)
+
+As variáveis mais importantes foram `perimeter_worst`, `concave points_worst`, `area_worst` e `concave points_mean`, todas ligadas ao **tamanho** e ao **formato irregular** do tumor.
+
+### SHAP — Regressão Logística (modelo selecionado)
+
+![SHAP summary](outputs/shap_summary.png)
+
+As cinco variáveis de maior impacto médio foram `texture_worst`, `concave points_mean`, `symmetry_worst`, `radius_se` e `radius_worst`.
+
+**Por que o ranking é diferente do Random Forest?**
+- Os dois rankings explicam **modelos diferentes**.
+- Variáveis como `radius`, `perimeter` e `area` são quase redundantes, porque todas medem o tamanho do tumor. A Regressão Logística divide o peso entre elas, e por isso cada uma, isoladamente, aparece com menos destaque. Já `texture_worst` traz uma informação diferente das demais e se destaca.
+- Mesmo assim, as duas análises concordam no essencial: **tamanho e concavidade** do tumor são os principais sinais de malignidade. Isso é coerente com a análise de correlação e com o conhecimento clínico.
+
+### Explicação de um paciente individual
+
+![SHAP individual](outputs/shap_individual.png)
+
+O gráfico mostra, para um único paciente, quais variáveis empurraram a previsão para "maligno" ou para "benigno". É esse tipo de explicação que permite ao médico entender e questionar a sugestão do modelo.
+
+---
+
+## Limitações e uso na prática
+
+**Como o modelo poderia ser usado:**
+- Como **ferramenta de triagem**, priorizando os exames com maior probabilidade de malignidade para revisão do especialista.
+- Como **segunda opinião**, com a explicação SHAP de cada caso mostrando quais medidas influenciaram a sugestão.
+
+**Limitações:**
+- O dataset é pequeno (569 pacientes) e vem de uma única instituição. O modelo precisaria ser validado com dados de outros hospitais antes de qualquer uso real.
+- Mesmo com recall de 95%, **2 casos malignos foram classificados como benignos** no teste. Em produção, seria recomendável reduzir o limiar de decisão para priorizar ainda mais o recall, aceitando mais falsos positivos.
+- O modelo depende de medidas já extraídas da imagem. Erros nessa etapa afetam a previsão.
+
+> **A decisão final é sempre do médico.** O modelo apoia a análise, mas não a substitui.
+
+---
+
+## Entregáveis
+
+- 📄 Relatório técnico: `[ADICIONAR LINK OU CAMINHO DO PDF]`
+- 🎥 Vídeo de demonstração: `[ADICIONAR LINK DO YOUTUBE]`
+
+---
+
+## Autores
+
+- `[NOME COMPLETO — RM]`
+- `[NOME COMPLETO — RM]`
+
+---
+
+**Tecnologias:** Python 3.14 · pandas · scikit-learn · SHAP · matplotlib · seaborn · Docker
