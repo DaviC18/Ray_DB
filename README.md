@@ -2,6 +2,12 @@
 
 Projeto desenvolvido para o Tech Challenge da Fase 1 da PÓS TECH.
 
+| | |
+|---|---|
+| 👤 **Autor** | Davi Valério Rocha de Souza Curty — RM378371 |
+| 🎥 **Vídeo de demonstração** | [youtu.be/_zYrclxcxac](https://youtu.be/_zYrclxcxac) |
+| 📄 **Relatório técnico** | [docs/Relatorio_Tecnico.pdf](docs/Relatorio_Tecnico.pdf) |
+
 O objetivo é construir a base de um sistema de **apoio ao diagnóstico** para um hospital universitário: a partir de medidas extraídas de exames de imagem de tumores de mama, um modelo de Machine Learning classifica o tumor como **benigno** ou **maligno**, destacando as informações que mais pesaram na decisão.
 
 > ⚠️ Este sistema é uma ferramenta de **suporte** à decisão clínica. Ele não substitui o médico, que sempre tem a palavra final no diagnóstico.
@@ -53,10 +59,13 @@ O arquivo já está incluído no repositório em `data/data.csv`. Caso precise b
 .
 ├── data/
 │   └── data.csv            # Dataset
+├── docs/
+│   └── Relatorio_Tecnico.pdf   # Relatório técnico
 ├── notebooks/
 │   └── extraCnnCbisDdsm.ipynb  # Parte extra: CNN com mamografias (Google Colab)
 ├── outputs/                # Gráficos e resultados gerados pela execução
 │   └── cnn/                # Resultados da parte extra
+├── slides/                 # Slides usados no vídeo de demonstração
 ├── main.py                 # Pipeline completo (EDA → modelagem → avaliação → SHAP)
 ├── requirements.txt        # Dependências Python
 ├── Dockerfile              # Imagem para execução em container
@@ -288,15 +297,14 @@ O Grad-CAM mostra que, em parte dos casos, a rede olha para a lesão. Em outros,
 ## Entregáveis
 
 - 📓 Notebook da parte extra: `notebooks/extraCnnCbisDdsm.ipynb`
-- 📄 Relatório técnico: `[ADICIONAR LINK OU CAMINHO DO PDF]`
-- 🎥 Vídeo de demonstração: `[ADICIONAR LINK DO YOUTUBE]`
+- 📄 Relatório técnico: [docs/Relatorio_Tecnico.pdf](docs/Relatorio_Tecnico.pdf)
+- 🎥 Vídeo de demonstração: [https://youtu.be/_zYrclxcxac](https://youtu.be/_zYrclxcxac)
 
 ---
 
 ## Autores
 
-- `[NOME COMPLETO — RM]`
-- `[NOME COMPLETO — RM]`
+- Davi Valério Rocha de Souza Curty — RM378371
 
 ---
 
