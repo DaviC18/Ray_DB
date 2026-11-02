@@ -5,7 +5,7 @@ nunca na pré-visualização. Quando o áudio chegar na frase marcada, role a
 pré-visualização até a seção logo abaixo da marca.
 -->
 
-# Diagnóstico de Câncer de Mama com Machine Learning
+# Ray_DB - Diagnóstico de Câncer de Mama com Machine Learning
 
 **Tech Challenge — Fase 1 · PÓS TECH · Davi Valério**
 
