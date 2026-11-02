@@ -1,64 +1,88 @@
-# Ray_DB - Diagnóstico de Câncer de Mama com Machine Learning
+<!--
+COMO USAR: abra este arquivo no PyCharm com a tela dividida (editor + pré-visualização).
+As linhas que começam com 🎙️ são marcas da narração: elas aparecem só no editor,
+nunca na pré-visualização. Quando o áudio chegar na frase marcada, role a
+pré-visualização até a seção logo abaixo da marca.
+-->
 
-**Tech Challenge — Fase 1 · PÓS TECH**
+# Diagnóstico de Câncer de Mama com Machine Learning
+
+**Tech Challenge — Fase 1 · PÓS TECH · Davi Valério**
 
 ---
+
+<!-- 🎙️ "Olá! Meu nome é Davi Valério..." -->
 
 ## 1. O problema
 
-- Um hospital universitário precisa **acelerar a triagem de exames** sem perder qualidade.
+- Um hospital universitário precisa **acelerar a triagem**, reduzir erros e otimizar o tempo dos profissionais.
 - Objetivo: classificar tumores de mama como **benignos** ou **malignos**.
-- O sistema é uma **ferramenta de apoio**: a decisão final é sempre do médico.
 
-**Duas abordagens:**
+<!-- 🎙️ "Para a parte principal, usamos o dataset Breast Cancer Wisconsin..." -->
 
-| Parte | Dados | Técnica |
-|---|---|---|
-| Principal | 30 medidas das células do tumor (tabela) | Regressão Logística e Random Forest |
-| Extra | Imagens de mamografia | Rede neural convolucional (CNN) |
-
----
-
-## 2. Dataset — Breast Cancer Wisconsin
+### Dataset — Breast Cancer Wisconsin
 
 | Característica | Valor |
 |---|---|
 | Pacientes | 569 |
-| Variáveis | 30 medidas numéricas |
-| Benignos | 357 (62,7%) |
-| Malignos | 212 (37,3%) |
-| Valores ausentes | Nenhum |
+| Variáveis | 30 medidas das células do tumor |
+| Exemplos de medidas | raio, área, textura, concavidade |
+| Benignos | 357 (63%) |
+| Malignos | 212 (37%) |
 
-**10 medidas × 3 versões:**
-- Medidas: raio, textura, perímetro, área, suavidade, compacidade, concavidade, pontos côncavos, simetria e dimensão fractal.
-- Versões: `_mean` (média), `_se` (erro padrão) e `_worst` (os piores valores).
+<!-- 🎙️ "Como extra, também treinamos uma rede neural convolucional..." -->
+
+| Parte | Dados | Técnica |
+|---|---|---|
+| Principal | 30 medidas (tabela) | Regressão Logística e Random Forest |
+| Extra | Imagens de mamografia | Rede neural convolucional (CNN) |
+
+> O sistema é uma **ferramenta de apoio**. Quem decide o diagnóstico é **sempre o médico**.
 
 ---
 
-## 3. Estrutura do projeto
+<!-- 🎙️ "Vamos começar pela organização do projeto..." -->
+
+## 2. Estrutura do projeto
 
 ```
 Rain_DB/
 ├── data/data.csv           → dataset
-├── main.py                 → pipeline completo
-├── notebooks/              → parte extra (CNN no Colab)
+├── main.py                 → pipeline da parte principal
+├── notebooks/              → parte extra (CNN)
 ├── outputs/                → gráficos e resultados
 ├── Dockerfile              → execução em container
-├── requirements.txt        → dependências
-└── README.md               → documentação
+└── requirements.txt        → bibliotecas com versões fixadas
 ```
 
-**Pipeline do `main.py`:**
+<!-- 🎙️ "O arquivo main está dividido em funções..." -->
 
-1. `load_data` → carrega e limpa os dados
-2. `perform_eda` → estatísticas e gráficos
-3. `split_data` → treino, validação e teste
-4. `build_models` → cria os dois modelos
-5. `train_and_select_model` → treina e escolhe o melhor
-6. `evaluate_model` → métricas no teste
-7. `analyze_feature_importance` e `analyze_with_shap` → interpretação
+**Uma função para cada etapa do `main.py`:**
 
-**Execução com um único comando:**
+1. `load_data` → carregar e limpar
+2. `perform_eda` → análise exploratória
+3. `split_data` → separar os dados
+4. `build_models` → construir os modelos
+5. `train_and_select_model` → treinar e escolher o melhor
+6. `evaluate_model` → avaliar no teste
+7. `analyze_feature_importance` e `analyze_with_shap` → interpretar
+
+<!-- 🎙️ "Para garantir que qualquer pessoa consiga rodar o projeto..." -->
+
+### Docker
+
+```dockerfile
+FROM python:3.14-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+CMD ["python", "main.py"]
+```
+
+<!-- 🎙️ "Com um único comando, o pipeline inteiro roda..." -->
+
+**Um único comando executa o pipeline inteiro:**
 
 ```bash
 docker run --rm -v "${PWD}/outputs:/app/outputs" tech-challenge
@@ -66,59 +90,109 @@ docker run --rm -v "${PWD}/outputs:/app/outputs" tech-challenge
 
 ---
 
-## 4. Análise exploratória
+<!-- 🎙️ "Antes de treinar qualquer modelo, exploramos os dados..." -->
+
+## 3. Análise exploratória
+
+### Qualidade dos dados
+
+| Verificação | Resultado |
+|---|---|
+| Valores ausentes | Nenhum |
+| Coluna `id` | Removida (sem valor para o diagnóstico) |
+| Coluna `Unnamed: 32` | Removida (totalmente vazia) |
+| Diagnóstico | **B → 0** (benigno) · **M → 1** (maligno) |
+
+<!-- 🎙️ "Este gráfico mostra quais medidas têm mais relação com o diagnóstico..." -->
 
 ### Correlação com o diagnóstico
 
 ![Correlação com o diagnóstico](outputs/correlacao_diagnostico.png)
 
-- As medidas mais ligadas à malignidade são as de **tamanho** (perímetro, raio, área) e as de **concavidade**.
-- `concave points_worst` tem correlação de **0,79** com o diagnóstico.
+- Mais fortes: **tamanho** (perímetro, raio, área) e **concavidade**.
+- Maior correlação: pontos côncavos, com **0,79**.
+
+<!-- 🎙️ "Aqui, na distribuição do raio médio, isso fica bem visível..." -->
 
 ### Distribuição do raio médio
 
 ![Distribuição de radius_mean](outputs/radius_mean_diagnostico.png)
 
-![Boxplot de radius_mean](outputs/boxplot_radius_mean.png)
+- **Azul:** benignos · **Laranja:** malignos.
+- Os malignos têm o raio **claramente maior**.
+- **Zona de dúvida** entre 13 e 16: uma medida só não basta para decidir.
 
-- Os tumores malignos são **claramente maiores**.
-- Existe uma **zona de sobreposição** (raio entre 13 e 16), onde uma única medida não basta para decidir.
+<!-- 🎙️ "Também notamos que as medidas estão em escalas muito diferentes..." -->
 
-### Pré-processamento
+### Escalas diferentes
 
-- Foram removidas as colunas `id` e `Unnamed: 32`, que estava vazia.
-- O diagnóstico foi codificado assim: **B → 0** e **M → 1**.
-- `StandardScaler` foi usado na Regressão Logística, **dentro do pipeline**, para evitar vazamento de dados.
+| Medida | Ordem de grandeza |
+|---|---|
+| `area_mean` | mais de 1.000 |
+| `smoothness_mean` | cerca de 0,1 |
+
+➡️ É preciso **padronizar** as medidas para a Regressão Logística.
 
 ---
 
-## 5. Separação dos dados
+<!-- 🎙️ "Para treinar e avaliar de forma justa, separamos os dados em três partes..." -->
+
+## 4. Separação dos dados
 
 | Conjunto | Proporção | Registros | Uso |
 |---|---|---|---|
 | Treino | 60% | 341 | O modelo aprende |
-| Validação | 20% | 114 | Escolha do melhor modelo |
-| Teste | 20% | 114 | Avaliação final, usado uma única vez |
+| Validação | 20% | 114 | Comparar e escolher o melhor modelo |
+| Teste | 20% | 114 | Prova final, usada uma única vez |
 
-A separação é **estratificada**: cada conjunto mantém a mesma proporção de benignos e malignos.
+A separação é **estratificada**: cada parte mantém a mesma proporção de benignos e malignos.
 
 ---
 
-## 6. Modelos e métrica
+<!-- 🎙️ "Comparamos dois modelos de natureza diferente..." -->
+
+## 5. Modelos
 
 | Modelo | Característica |
 |---|---|
-| **Regressão Logística** | Linear, simples e interpretável |
-| **Random Forest** | 200 árvores e captura relações não lineares |
+| **Regressão Logística** | Linear, simples e fácil de interpretar |
+| **Random Forest** | 200 árvores de decisão, capta relações mais complexas |
 
-### Por que o recall?
+<!-- 🎙️ "A Regressão Logística precisa que todas as medidas estejam na mesma escala..." -->
 
-| Erro | Consequência |
+### Pipeline e vazamento de dados
+
+```python
+Pipeline([
+    ("scaler", StandardScaler()),       # aprende média e desvio só no treino
+    ("modelo", LogisticRegression()),
+])
+```
+
+| ❌ Padronizar a base inteira antes de separar | ✅ Padronizar dentro do pipeline |
 |---|---|
-| **Falso negativo** (maligno → benigno) | A paciente fica sem tratamento. **É o erro mais grave.** |
-| Falso positivo (benigno → maligno) | Exames extras e biópsia |
+| O modelo "espia" a validação e o teste | A padronização aprende só com o treino |
+| Resultados otimistas demais | Avaliação honesta |
 
-➡️ O modelo foi escolhido pelo **recall da classe maligna**, ou seja, quantos casos malignos ele encontra.
+---
+
+<!-- 🎙️ "Agora, a escolha mais importante do projeto: qual métrica usar..." -->
+
+## 6. A métrica: por que o recall?
+
+| Erro | O que acontece | Gravidade |
+|---|---|---|
+| Falso positivo (benigno → maligno) | Exames adicionais e biópsia | Custo reversível |
+| **Falso negativo** (maligno → benigno) | **A paciente fica sem tratamento** | **O erro mais grave** |
+
+<!-- 🎙️ "A acurácia sozinha esconde essa diferença..." -->
+
+### A armadilha da acurácia
+
+> Um modelo que dissesse **"benigno" para todo mundo** acertaria **63%** dos casos e não serviria para nada.
+
+- **Recall (maligno):** quantos casos malignos o modelo encontra → **critério de escolha**.
+- **F1-score:** equilíbrio entre precisão e recall.
 
 | Modelo | Recall na validação |
 |---|---|
@@ -127,140 +201,167 @@ A separação é **estratificada**: cada conjunto mantém a mesma proporção de
 
 ---
 
-## 7. Resultados no teste — Regressão Logística
+<!-- 🎙️ "No teste final, o modelo acertou 97,4% dos casos..." -->
 
-| Métrica | Valor |
-|---|---|
-| Acurácia | **97,4%** |
-| Recall (maligno) | **95,2%** |
-| Precisão (maligno) | 97,6% |
-| F1-score (maligno) | 96,4% |
+## 7. Resultado final no teste — Regressão Logística
+
+| Acurácia | Recall (maligno) | Precisão (maligno) | F1-score (maligno) |
+|---|---|---|---|
+| **97,4%** | **95,2%** | 97,6% | 96,4% |
 
 ![Matriz de confusão](outputs/matriz_confusao.png)
 
-- O modelo encontrou **40 de 42** tumores malignos.
-- Errou 3 casos em 114: **2 falsos negativos** e 1 falso positivo.
+- Encontrou **40 de 42** tumores malignos.
+- 3 erros em 114 casos: 1 falso positivo e **2 falsos negativos**.
 
 ---
 
+<!-- 🎙️ "Um modelo que acerta muito não basta..." -->
+
 ## 8. Interpretação do modelo
 
-### SHAP — visão geral
+### SHAP — quanto cada medida contribui para cada previsão
+
+<!-- 🎙️ "Neste gráfico, cada ponto é um paciente..." -->
 
 ![SHAP summary](outputs/shap_summary.png)
 
-- Cada ponto é um paciente. **Vermelho** indica valor alto e **azul**, valor baixo.
-- Pontos à direita empurram a previsão para **maligno**.
-- Variáveis de maior impacto: `texture_worst`, `concave points_mean`, `symmetry_worst`, `radius_se` e `radius_worst`.
+- Cada ponto é um paciente.
+- 🔴 Vermelho = valor alto · 🔵 Azul = valor baixo.
+- Direita → **maligno** · Esquerda → **benigno**.
 
-### SHAP — explicação de um paciente
+<!-- 🎙️ "E este é o ponto mais útil para o médico: a explicação de um único paciente..." -->
+
+### SHAP — explicação de um único paciente
 
 ![SHAP individual](outputs/shap_individual.png)
 
-- O gráfico mostra **por que** o modelo deu aquela resposta para aquele paciente.
-- Com isso, o médico pode **conferir e discordar** do modelo.
+- Cada barra mostra o quanto uma medida empurrou a decisão.
+- O médico recebe **a resposta e o motivo**, e pode discordar.
+
+<!-- 🎙️ "Também geramos a importância das variáveis do Random Forest..." -->
 
 ### Feature importance — Random Forest
 
 ![Feature importance](outputs/feature_importance.png)
 
-- No topo: `perimeter_worst`, `concave points_worst` e `area_worst`.
-- O ranking é diferente do SHAP porque os **modelos são diferentes** e porque **raio, perímetro e área são redundantes**.
-- Mesmo assim, os dois concordam: **tamanho e concavidade** são os sinais principais.
+**Por que o ranking é diferente do SHAP?**
+1. São **modelos diferentes**.
+2. Raio, perímetro e área medem **quase a mesma coisa**, e a Regressão Logística divide o peso entre elas.
+
+➡️ As duas técnicas concordam no essencial: **tamanho e concavidade** são os principais sinais de malignidade.
 
 ---
 
-## 9. Extra — CNN com mamografias (CBIS-DDSM)
+<!-- 🎙️ "Como parte extra, tentamos fazer o mesmo diagnóstico de outro jeito..." -->
 
-### Dados
+## 9. Extra — CNN com mamografias (CBIS-DDSM)
 
 ![Exemplos de recortes](outputs/cnn/exemplos_imagens.png)
 
-![Distribuição das classes](outputs/cnn/distribuicao_classes.png)
-
-| Conjunto | Imagens | Malignos |
+| Imagens | Tipos de lesão | Malignos |
 |---|---|---|
-| Treino | 2.277 | 41,2% |
-| Validação | 585 | 41,5% |
-| Teste | 704 | 39,2% |
+| 3.566 recortes | Massas e calcificações | 41% |
 
-- São 3.566 **recortes de lesões** (massas e calcificações).
-- Treino e validação foram **separados por paciente**.
+<!-- 🎙️ "Um cuidado importante: treino e validação foram divididos por paciente..." -->
 
-### Modelo
+### Separação por paciente
 
-- *Transfer learning* com a **EfficientNetB0**, pré-treinada no ImageNet.
-- Imagens de 224×224, com aumento de dados (giros, rotação, zoom e contraste).
-- Treino em 2 fases: primeiro o classificador e depois o ajuste fino das últimas 40 camadas.
-- Executado no **Google Colab com GPU T4**.
+| Conjunto | Imagens | Como foi formado |
+|---|---|---|
+| Treino | 2.277 | Pacientes do treino oficial |
+| Validação | 585 | **Outras pacientes** do treino oficial |
+| Teste | 704 | Divisão oficial do dataset |
 
-### Treinamento
+➡️ A rede não pode **reconhecer a paciente** em vez de aprender o padrão da lesão.
+
+<!-- 🎙️ "Treinamos no Google Colab, com GPU..." -->
+
+### Transfer learning
+
+- **EfficientNetB0**, pré-treinada em mais de **1 milhão de imagens** (ImageNet).
+- Só a parte final foi trocada, para responder **benigno ou maligno**.
+- Treino em **2 fases**: 1) só a parte nova · 2) ajuste fino das últimas camadas.
+- Executado no **Google Colab com GPU**.
+
+<!-- 🎙️ "As curvas de treino e de validação andam juntas..." -->
+
+### Curvas de treinamento
 
 ![Curvas de treinamento](outputs/cnn/curvas_treinamento.png)
 
-- Treino e validação andam juntos, ou seja, **não houve overfitting**.
-- A AUC de validação **ainda subia** no final, então mais treino pode melhorar o resultado.
+- Treino e validação juntos → **sem overfitting**.
+- A validação **ainda subia** no final → mais treino deve melhorar.
 
-### Resultados no teste
+<!-- 🎙️ "O resultado foi uma AUC de 0,73 no teste..." -->
+
+### Resultados no teste — AUC 0,73
 
 ![Matriz de confusão e curva ROC da CNN](outputs/cnn/matriz_confusao_roc_cnn.png)
 
-**AUC: 0,73**
+| Limiar | Recall (maligno) | Precisão | Acurácia |
+|---|---|---|---|
+| 50% (padrão) | 52,9% → só metade dos malignos | 62,1% | 68,9% |
+| **27% (ajustado)** | **89,9%** | 46,9% | 56,1% |
 
-| Limiar | Acurácia | Precisão | Recall | F1 |
-|---|---|---|---|---|
-| 0,5 (padrão) | 68,9% | 62,1% | 52,9% | 57,1% |
-| **0,274 (ajustado)** | 56,1% | 46,9% | **89,9%** | **61,6%** |
+- Com o limiar ajustado: **248 de 276** lesões malignas encontradas.
+- O preço: **281 de 428** benignos marcados como suspeitos.
 
-- Com o limiar ajustado, a rede encontra **248 de 276** lesões malignas.
-- O custo: **281 de 428** benignos marcados como suspeitos.
+<!-- 🎙️ "Por fim, o Grad-CAM, que é o equivalente do SHAP para imagens..." -->
 
 ### Grad-CAM — onde a rede olha
 
 ![Grad-CAM](outputs/cnn/grad_cam.png)
 
-- Em alguns casos, a rede **foca na lesão**.
-- Em outros, inclusive nos erros, ela **foca nas bordas do recorte**.
-- Conclusão: a CNN **ainda não é confiável** para uso clínico.
+- ✅ Em alguns casos, ela foca **na lesão**.
+- ❌ Em outros, inclusive nos erros, ela foca **nas bordas do recorte**.
+
+➡️ A rede **ainda não é confiável**, e foi a interpretação que mostrou isso.
 
 ---
 
-## 10. Comparação e discussão
+<!-- 🎙️ "Comparando as duas abordagens: o modelo tabular foi muito melhor..." -->
+
+## 10. Comparação
 
 | Aspecto | Modelo tabular | CNN com imagens |
 |---|---|---|
-| Entrada | 30 medidas já extraídas | Recorte da mamografia |
+| Entrada | Medidas já extraídas por especialistas | Mamografias digitalizadas de filme |
 | Recall (maligno) | **95,2%** | 89,9% |
 | Falsos positivos | 1 em 72 | 281 em 428 |
 | Interpretação | SHAP coerente com a clínica | Grad-CAM às vezes fora da lesão |
-| Prontidão | Pronto para validação externa | Precisa de mais trabalho |
 
-**Por que a diferença?** O modelo tabular recebe medidas que especialistas já extraíram. A CNN precisa aprender sozinha o que observar.
+<!-- 🎙️ "E esse modelo pode ser usado na prática?..." -->
 
-### Uso na prática
+## 11. Uso na prática
 
-1. **Triagem:** colocar no topo da fila os exames com maior chance de malignidade.
-2. **Segunda leitura:** mostrar a probabilidade junto com a explicação (SHAP).
-3. **Alerta de divergência:** sinalizar os casos em que o laudo e o modelo discordam.
+| Uso | Como funciona |
+|---|---|
+| **Triagem** | Exames com maior chance de malignidade vão para o topo da fila |
+| **Segunda opinião** | Probabilidade + explicação do SHAP para o médico |
+| **Alerta** | Revisão dos casos em que o laudo e o modelo discordam |
+
+<!-- 🎙️ "Mas há limitações importantes..." -->
 
 ### Limitações
 
-- Dataset pequeno, vindo de uma única instituição. É preciso validar com dados externos.
+- Dataset pequeno, de uma **única instituição** → precisa de validação com outros hospitais.
 - Mesmo com 95% de recall, **2 casos malignos** passaram.
-- A CNN depende de recortes já marcados por um radiologista.
 
-### Próximos passos
+> **Em nenhum momento o modelo decide sozinho. A palavra final é sempre do médico.**
 
-- Treinar a CNN por mais épocas e com imagens de maior resolução.
-- Validar os dois modelos com dados de outros hospitais.
+<!-- 🎙️ "Já a rede neural ainda não está pronta para uso..." -->
+
+### Próximos passos da CNN
+
+- Treinar por mais tempo.
+- Usar imagens com mais resolução.
+- Garantir que ela olhe para a lesão.
 
 ---
 
-## Conclusão
+<!-- 🎙️ "O código completo, o Dockerfile, os resultados e o relatório técnico..." -->
 
-- ✅ Pipeline completo e reproduzível com Docker.
-- ✅ Modelo tabular com **97,4% de acurácia** e **95,2% de recall** para malignos.
-- ✅ Previsões explicáveis com SHAP.
-- ✅ Extra: CNN com mamografias (AUC de 0,73) e Grad-CAM.
+## Obrigado!
 
-> **O sistema apoia o médico, mas não o substitui. A palavra final é sempre do médico.**
+**No repositório do GitHub:** código completo · Dockerfile · resultados · relatório técnico
