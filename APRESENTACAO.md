@@ -1,4 +1,4 @@
-# Rain_DB - Diagnóstico de Câncer de Mama com Machine Learning
+# Ray_DB - Diagnóstico de Câncer de Mama com Machine Learning
 
 **Tech Challenge — Fase 1 · PÓS TECH**
 
