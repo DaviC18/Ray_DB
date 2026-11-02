@@ -1,303 +1,247 @@
-# Tech Challenge — Fase 1: Diagnóstico de Câncer de Mama com Machine Learning
+# Roteiro de apresentação — Tech Challenge Fase 1
 
-Projeto desenvolvido para o Tech Challenge da Fase 1 da PÓS TECH.
+Guia para o vídeo de demonstração. São 7 blocos e cerca de **13 minutos**, abaixo do limite de 15.
 
-O objetivo é construir a base de um sistema de **apoio ao diagnóstico** para um hospital universitário: a partir de medidas extraídas de exames de imagem de tumores de mama, um modelo de Machine Learning classifica o tumor como **benigno** ou **maligno**, destacando as informações que mais pesaram na decisão.
+As imagens aparecem logo antes da fala correspondente. No PyCharm, abra este arquivo e clique no ícone de **pré-visualização** (canto superior direito do editor) para ver as imagens; no GitHub elas já aparecem direto.
 
-> ⚠️ Este sistema é uma ferramenta de **suporte** à decisão clínica. Ele não substitui o médico, que sempre tem a palavra final no diagnóstico.
-
----
-
-## Sumário
-
-- [Dataset](#dataset)
-- [Estrutura do projeto](#estrutura-do-projeto)
-- [Como executar](#como-executar)
-- [Fluxo do pipeline](#fluxo-do-pipeline)
-- [Resultados](#resultados)
-- [Interpretação do modelo](#interpretação-do-modelo)
-- [Extra: CNN com mamografias](#extra-cnn-com-mamografias-cbis-ddsm)
-- [Limitações e uso na prática](#limitações-e-uso-na-prática)
-- [Entregáveis](#entregáveis)
-- [Autores](#autores)
+Não precisa decorar as falas: leia algumas vezes, entenda a ideia e fale com as suas palavras. As frases citadas são só uma base.
 
 ---
 
-## Dataset
+## Visão geral
 
-**Breast Cancer Wisconsin (Diagnostic)**
-Fonte: [Kaggle — uciml/breast-cancer-wisconsin-data](https://www.kaggle.com/datasets/uciml/breast-cancer-wisconsin-data/data)
-
-| Característica | Valor |
-|---|---|
-| Registros (pacientes) | 569 |
-| Variáveis preditoras | 30 (numéricas) |
-| Variável alvo | `diagnosis` — B (benigno) / M (maligno) |
-| Benignos | 357 (62,7%) |
-| Malignos | 212 (37,3%) |
-| Valores ausentes | Nenhum (exceto a coluna vazia `Unnamed: 32`, removida) |
-
-As 30 variáveis descrevem os núcleos celulares de uma imagem digitalizada de punção aspirativa por agulha fina (PAAF). São 10 medidas (raio, textura, perímetro, área, suavidade, compacidade, concavidade, pontos côncavos, simetria e dimensão fractal), cada uma em três versões:
-
-- `_mean`: valor médio;
-- `_se`: erro padrão;
-- `_worst`: média dos três maiores valores.
-
-O arquivo já está incluído no repositório em `data/data.csv`. Caso precise baixá-lo novamente, salve-o nesse mesmo caminho.
+| Bloco | Tempo | O que aparece na tela |
+|---|---|---|
+| 1. Abertura e problema | 0:00 – 1:30 | README no GitHub |
+| 2. Projeto e execução com Docker | 1:30 – 3:30 | PyCharm e terminal rodando o Docker |
+| 3. Análise exploratória | 3:30 – 5:00 | Gráficos da pasta `outputs/` |
+| 4. Modelos e resultados | 5:00 – 7:00 | Código dos modelos e saída do terminal |
+| 5. Interpretação com SHAP | 7:00 – 8:30 | `shap_summary.png` e `shap_individual.png` |
+| 6. Extra: CNN | 8:30 – 11:30 | Notebook no Colab e gráficos de `outputs/cnn/` |
+| 7. Discussão e encerramento | 11:30 – 13:00 | Relatório técnico |
 
 ---
 
-## Estrutura do projeto
+## Antes de gravar
 
-```
-.
-├── data/
-│   └── data.csv            # Dataset
-├── notebooks/
-│   └── extraCnnCbisDdsm.ipynb  # Parte extra: CNN com mamografias (Google Colab)
-├── outputs/                # Gráficos e resultados gerados pela execução
-│   └── cnn/                # Resultados da parte extra
-├── main.py                 # Pipeline completo (EDA → modelagem → avaliação → SHAP)
-├── requirements.txt        # Dependências Python
-├── Dockerfile              # Imagem para execução em container
-├── .dockerignore
-└── README.md
-```
+**Deixe aberto, nesta ordem:**
+
+- [ ] Navegador com o repositório no GitHub (página do README)
+- [ ] PyCharm com o projeto Rain_DB e o `main.py` aberto
+- [ ] Terminal na pasta do projeto, com o Docker Desktop rodando
+- [ ] Pasta `outputs/` aberta no gerenciador de arquivos
+- [ ] Notebook da CNN no Colab, **já executado**
+- [ ] Relatório técnico
+
+**Dicas:**
+
+- **Rode o `docker build` antes de gravar.** Assim a imagem já fica pronta e, no vídeo, você só executa o `docker run`, que leva poucos segundos.
+- **Não treine a CNN ao vivo**, porque leva cerca de 15 minutos. Mostre o notebook já executado e explique os resultados.
+- **Para gravar no Ubuntu**, use o OBS Studio (`sudo apt install obs-studio`). Grave a tela inteira, com o microfone ligado.
+- Aumente a fonte do PyCharm e do terminal para ficarem legíveis no vídeo.
+- Feche as abas que não têm a ver com o projeto e silencie as notificações.
+- Se errar uma fala, pare, respire e repita a frase. Depois é só cortar o trecho. Você pode gravar bloco por bloco e juntar depois.
+- Envie para o YouTube como **Não listado**.
+
+> ⚠️ **Confira antes de gravar:** a legenda do `outputs/radius_mean_diagnostico.png` precisa mostrar **azul = Benigno** e **laranja = Maligno**. Se ainda aparecer só laranja, aplique a correção do `df_plot` no `perform_eda` e rode o Docker de novo.
 
 ---
 
-## Como executar
+## Bloco 1 — Abertura e problema (0:00 – 1:30)
 
-### Opção 1 — Docker (recomendado)
+**Tela:** a página do README no GitHub. Role devagar até a tabela do dataset.
 
-Pré-requisito: [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalado e em execução.
+**Fala:**
+
+> "Olá! Meu nome é [seu nome], e este é o nosso projeto do Tech Challenge da Fase 1 da PÓS TECH.
+>
+> O desafio é de um hospital universitário que quer usar inteligência artificial para apoiar o diagnóstico médico. Com o volume de exames crescendo, o hospital precisa acelerar a triagem sem perder qualidade.
+>
+> O problema que escolhemos foi o diagnóstico de câncer de mama: a partir de um exame, dizer se o tumor é benigno ou maligno.
+>
+> Usamos o dataset Breast Cancer Wisconsin, que tem 569 pacientes e 30 medidas das células do tumor, como raio, área, textura e concavidade. Cerca de 63% dos casos são benignos e 37% são malignos.
+>
+> E, como extra, também treinamos uma rede neural para fazer o mesmo diagnóstico diretamente a partir de imagens de mamografia.
+>
+> Um ponto importante desde já: esse sistema é uma ferramenta de apoio. Quem decide o diagnóstico é sempre o médico."
+
+---
+
+## Bloco 2 — Estrutura do projeto e execução com Docker (1:30 – 3:30)
+
+**Tela:** primeiro o PyCharm, com a árvore de pastas aberta. Depois mostre rapidamente o `Dockerfile` e passe para o terminal.
+
+**Fala, mostrando as pastas:**
+
+> "O projeto está organizado assim: em `data` fica o dataset, o `main.py` tem todo o pipeline, a pasta `notebooks` tem a parte extra com a rede neural e a pasta `outputs` guarda os gráficos e os resultados.
+>
+> O `main.py` está dividido em funções, uma para cada etapa: carregar os dados, fazer a análise exploratória, separar os dados, treinar os modelos, avaliar e interpretar."
+
+**Fala, mostrando o `Dockerfile`:**
+
+> "Para que qualquer pessoa consiga rodar o projeto do mesmo jeito, colocamos tudo em um container Docker. O Dockerfile usa uma imagem do Python, instala as bibliotecas do `requirements.txt` e executa o `main.py`."
+
+**No terminal, rode:**
 
 ```bash
-# 1. Construir a imagem
-docker build -t tech-challenge .
-
-# 2. Executar o pipeline (os gráficos serão salvos na pasta outputs/ local)
 docker run --rm -v "${PWD}/outputs:/app/outputs" tech-challenge
 ```
 
-> No Prompt de Comando (cmd) do Windows, troque `${PWD}` por `%cd%`.
+**Fala, enquanto a saída aparece:**
 
-### Opção 2 — Ambiente local
-
-Pré-requisito: Python 3.14.
-
-```bash
-# 1. Criar e ativar o ambiente virtual
-python -m venv .venv
-
-# Windows (PowerShell)
-.venv\Scripts\Activate.ps1
-# Linux / macOS
-source .venv/bin/activate
-
-# 2. Instalar as dependências
-pip install -r requirements.txt
-
-# 3. Executar
-python main.py
-```
-
-A execução imprime no terminal as estatísticas, as métricas dos modelos e as variáveis mais importantes. Os gráficos são salvos em `outputs/`.
+> "Com um único comando, o pipeline inteiro roda: ele carrega os dados, gera os gráficos, treina os dois modelos, avalia e gera as explicações. O `-v` faz os gráficos criados dentro do container aparecerem na pasta `outputs` do computador."
 
 ---
 
-## Fluxo do pipeline
+## Bloco 3 — Análise exploratória (3:30 – 5:00)
 
-### 1. Carregamento e limpeza
-- Leitura de `data/data.csv`.
-- Remoção das colunas `id` (identificador, sem valor preditivo) e `Unnamed: 32` (totalmente vazia).
-- Validação da coluna alvo e codificação: **B → 0** (benigno), **M → 1** (maligno).
+**Tela:** abra os gráficos da pasta `outputs/`, um de cada vez.
 
-### 2. Análise exploratória (EDA)
-- Estatísticas descritivas de todas as variáveis.
-- Correlação de cada variável com o diagnóstico.
-- Histogramas e boxplot comparando benignos e malignos.
-
-### 3. Separação dos dados
-Divisão estratificada, que mantém a proporção de benignos e malignos em cada conjunto:
-
-| Conjunto | Proporção | Registros | Uso |
-|---|---|---|---|
-| Treino | 60% | 341 | Ajuste dos modelos |
-| Validação | 20% | 114 | Comparação e escolha do melhor modelo |
-| Teste | 20% | 114 | Avaliação final (usado uma única vez) |
-
-### 4. Modelagem
-Dois modelos, cada um em um `Pipeline` do scikit-learn:
-
-| Modelo | Pré-processamento | Por que foi escolhido |
-|---|---|---|
-| **Regressão Logística** | `StandardScaler` | Modelo linear, simples e interpretável; sensível à escala, por isso a padronização |
-| **Random Forest** (200 árvores) | Nenhum | Captura relações não lineares; não depende da escala das variáveis |
-
-O `StandardScaler` fica dentro do pipeline, então é ajustado **somente com os dados de treino**. Isso evita vazamento de informação para a validação e o teste.
-
-### 5. Seleção do modelo
-O critério é o **recall da classe maligna** no conjunto de validação.
-
-Em diagnóstico de câncer, o erro mais grave é o **falso negativo**: classificar um tumor maligno como benigno, o que pode atrasar o tratamento. O recall mede exatamente a proporção de casos malignos que o modelo consegue identificar.
-
-### 6. Avaliação e interpretação
-- Métricas no conjunto de teste: acurácia, precisão, recall e F1-score.
-- Matriz de confusão.
-- Importância das variáveis (Random Forest).
-- Valores SHAP do modelo selecionado: explicação global e explicação de um paciente individual.
-
----
-
-## Resultados
-
-### Comparação na validação
-
-| Modelo | Recall (maligno) |
-|---|---|
-| **Regressão Logística** | **0,9767** |
-| Random Forest | 0,9535 |
-
-➡️ Modelo selecionado: **Regressão Logística**
-
-### Desempenho final no teste
-
-| Métrica | Valor |
-|---|---|
-| Acurácia | **97,37%** |
-| Precisão (maligno) | 97,56% |
-| Recall (maligno) | **95,24%** |
-| F1-score (maligno) | 96,39% |
-
-### Matriz de confusão (teste)
-
-|  | Previsto benigno | Previsto maligno |
-|---|---|---|
-| **Real benigno** | 71 | 1 |
-| **Real maligno** | 2 | 40 |
-
-Dos 42 tumores malignos do conjunto de teste, o modelo identificou 40. Houve **2 falsos negativos** e **1 falso positivo**.
-
-![Matriz de confusão](outputs/matriz_confusao.png)
-
-### Variáveis mais correlacionadas com o diagnóstico
-
-| Variável | Correlação |
-|---|---|
-| concave points_worst | 0,794 |
-| perimeter_worst | 0,783 |
-| concave points_mean | 0,777 |
-| radius_worst | 0,777 |
-| perimeter_mean | 0,743 |
+**Com o `correlacao_diagnostico.png`:**
 
 ![Correlação com o diagnóstico](outputs/correlacao_diagnostico.png)
 
+> "Antes de treinar qualquer modelo, exploramos os dados. Este gráfico mostra quais medidas têm mais relação com o diagnóstico. As mais fortes são as de tamanho do tumor, como perímetro e raio, e as de concavidade, que medem o quanto o contorno do tumor é irregular. Faz sentido clinicamente: tumores malignos costumam ser maiores e mais irregulares."
+
+**Com o `radius_mean_diagnostico.png`:**
+
 ![Distribuição de radius_mean](outputs/radius_mean_diagnostico.png)
+
+> "Aqui fica bem visível: em azul os benignos, em laranja os malignos. Os malignos têm o raio claramente maior. Mas reparem que existe uma faixa em que as duas cores se misturam. É nessa zona de dúvida que o modelo precisa combinar várias medidas para decidir."
+
+**Opcional, se quiser mostrar mais um gráfico (`boxplot_radius_mean.png`):**
+
+![Boxplot de radius_mean](outputs/boxplot_radius_mean.png)
+
+**Fala sobre a limpeza (pode ser em cima do mesmo gráfico):**
+
+> "Os dados já vinham bem limpos. Removemos só a coluna de identificação e uma coluna vazia, e convertemos o diagnóstico para números: zero para benigno e um para maligno."
 
 ---
 
-## Interpretação do modelo
+## Bloco 4 — Modelos, métrica e resultados (5:00 – 7:00)
 
-### Importância das variáveis — Random Forest
+**Tela:** no PyCharm, mostre as funções `split_data` e `build_models`. Depois volte ao terminal com a saída do Docker e, por fim, abra `matriz_confusao.png`.
 
-![Feature importance](outputs/feature_importance.png)
+**Com o `split_data`:**
 
-As variáveis mais importantes foram `perimeter_worst`, `concave points_worst`, `area_worst` e `concave points_mean`, todas ligadas ao **tamanho** e ao **formato irregular** do tumor.
+> "Separamos os dados em três partes: 60% para treino, 20% para validação e 20% para teste. O treino serve para o modelo aprender, a validação serve para escolher o melhor modelo, e o teste é usado uma única vez, no final, como uma prova que o modelo nunca viu. A separação é estratificada, então cada parte mantém a mesma proporção de benignos e malignos."
 
-### SHAP — Regressão Logística (modelo selecionado)
+**Com o `build_models`:**
+
+> "Comparamos dois modelos. A Regressão Logística, que é simples e fácil de interpretar, e o Random Forest, que combina várias árvores de decisão e capta relações mais complexas. A Regressão Logística precisa que todas as medidas estejam na mesma escala, por isso ela tem o StandardScaler dentro do pipeline. Assim, a padronização aprende só com os dados de treino, e nada da validação ou do teste vaza para o modelo."
+
+**Com a saída do terminal (parte da comparação dos modelos):**
+
+> "Agora, a escolha mais importante do projeto: qual métrica usar. Em diagnóstico de câncer, o pior erro é dizer que um tumor maligno é benigno, porque a paciente pode ficar sem tratamento. Por isso escolhemos o modelo pelo recall da classe maligna, que mede quantos casos malignos o modelo consegue encontrar. A Regressão Logística teve recall de 97,7% na validação, contra 95,3% do Random Forest, e foi a escolhida."
+
+**Com o `matriz_confusao.png`:**
+
+![Matriz de confusão](outputs/matriz_confusao.png)
+
+> "No teste final, o modelo acertou 97,4% dos casos. Dos 42 tumores malignos, encontrou 40, ou seja, um recall de 95,2%. Ele errou 3 casos em 114: um benigno classificado como maligno e dois malignos classificados como benignos. Esses dois são justamente os erros mais graves, e voltaremos a eles na discussão."
+
+---
+
+## Bloco 5 — Interpretação com SHAP (7:00 – 8:30)
+
+**Tela:** abra `shap_summary.png` e depois `shap_individual.png`.
+
+**Com o `shap_summary.png`:**
 
 ![SHAP summary](outputs/shap_summary.png)
 
-As cinco variáveis de maior impacto médio foram `texture_worst`, `concave points_mean`, `symmetry_worst`, `radius_se` e `radius_worst`.
+> "Um modelo que acerta muito não basta. O médico precisa entender por que o modelo chegou a uma resposta. Para isso usamos o SHAP, que mede o quanto cada medida contribuiu para cada previsão.
+>
+> Neste gráfico, cada ponto é um paciente. As medidas mais importantes ficam no topo, como a textura, os pontos côncavos e o raio. A cor mostra o valor da medida: vermelho é alto e azul é baixo. Pontos à direita empurram a previsão para maligno. Dá para ver que valores altos dessas medidas puxam para maligno, o que bate com o que vimos na análise exploratória."
 
-**Por que o ranking é diferente do Random Forest?**
-- Os dois rankings explicam **modelos diferentes**.
-- Variáveis como `radius`, `perimeter` e `area` são quase redundantes, porque todas medem o tamanho do tumor. A Regressão Logística divide o peso entre elas, e por isso cada uma, isoladamente, aparece com menos destaque. Já `texture_worst` traz uma informação diferente das demais e se destaca.
-- Mesmo assim, as duas análises concordam no essencial: **tamanho e concavidade** do tumor são os principais sinais de malignidade. Isso é coerente com a análise de correlação e com o conhecimento clínico.
-
-### Explicação de um paciente individual
+**Com o `shap_individual.png`:**
 
 ![SHAP individual](outputs/shap_individual.png)
 
-O gráfico mostra, para um único paciente, quais variáveis empurraram a previsão para "maligno" ou para "benigno". É esse tipo de explicação que permite ao médico entender e questionar a sugestão do modelo.
+> "E este é o ponto mais útil para o médico: a explicação de um único paciente. Cada barra mostra uma medida e o quanto ela empurrou a decisão para um lado ou para o outro. Assim o médico não recebe só um 'maligno' ou 'benigno', mas também o motivo, e pode concordar ou discordar."
+
+**Se sobrar tempo, mostre o `feature_importance.png` e mencione:**
+
+![Feature importance do Random Forest](outputs/feature_importance.png)
+
+> "Também geramos a importância das variáveis do Random Forest. O ranking é um pouco diferente, porque são modelos diferentes e porque raio, perímetro e área medem quase a mesma coisa. Mesmo assim, os dois concordam que tamanho e concavidade são os sinais principais."
 
 ---
 
-## Extra: CNN com mamografias (CBIS-DDSM)
+## Bloco 6 — Extra: CNN com mamografias (8:30 – 11:30)
 
-Como parte bônus, o mesmo diagnóstico (benigno ou maligno) foi feito **diretamente a partir de imagens de mamografia**, com uma rede neural convolucional.
+**Tela:** o notebook já executado no Colab. Role até cada gráfico enquanto fala. Os mesmos gráficos também estão em `outputs/cnn/`.
 
-**Dataset:** [CBIS-DDSM — Kaggle](https://www.kaggle.com/datasets/awsaf49/cbis-ddsm-breast-cancer-image-dataset/data). Foram usados 3.566 recortes de lesões (massas e calcificações), com 40,8% de casos malignos.
+**Com a célula de exemplos de imagens (`exemplos_imagens.png`):**
 
-**Como executar:** abra `notebooks/extraCnnCbisDdsm.ipynb` no [Google Colab](https://colab.research.google.com), ative a GPU (*Ambiente de execução → Alterar o tipo de ambiente de execução → GPU T4*) e clique em *Executar tudo*. O próprio notebook baixa o dataset pelo `kagglehub`.
+![Exemplos de recortes](outputs/cnn/exemplos_imagens.png)
 
-**Abordagem:**
-- *Transfer learning* com a **EfficientNetB0** pré-treinada no ImageNet, com imagens de 224×224 e aumento de dados.
-- Treino em duas fases: primeiro só o classificador final e depois o ajuste fino das últimas 40 camadas.
-- Separação treino / validação **por paciente** e teste com a divisão oficial do dataset.
-- Limiar de decisão escolhido na validação para garantir recall ≥ 85% para malignos.
-- Interpretação com **Grad-CAM**.
+> "Como parte extra, tentamos fazer o mesmo diagnóstico de outro jeito: em vez de medidas prontas, a rede recebe a própria imagem da mamografia. Usamos o dataset CBIS-DDSM, com cerca de 3.500 recortes de lesões, entre massas e calcificações. Em cima ficam exemplos benignos e embaixo, malignos. Dá para ver que, a olho nu, não é nada óbvio distinguir uns dos outros."
 
-| Conjunto | Imagens | Malignos |
-|---|---|---|
-| Treino | 2.277 | 41,2% |
-| Validação | 585 | 41,5% |
-| Teste | 704 | 39,2% |
+**Com a célula do modelo (pode mostrar também o `distribuicao_classes.png`):**
 
-### Resultados no teste
+![Distribuição das classes no CBIS-DDSM](outputs/cnn/distribuicao_classes.png)
 
-AUC: **0,728**
+> "Treinamos no Google Colab, com GPU. Como 3 mil imagens são poucas para treinar uma rede do zero, usamos transfer learning: pegamos a EfficientNet, uma rede que já aprendeu a reconhecer bordas, texturas e formas em milhões de imagens, e trocamos só a parte final, para ela responder 'benigno ou maligno'. Também tomamos o cuidado de separar treino e validação por paciente, para que a rede não reconheça a mesma paciente em vez de aprender o padrão da lesão."
 
-| Limiar | Acurácia | Precisão (maligno) | Recall (maligno) | F1 (maligno) |
-|---|---|---|---|---|
-| 0,5 (padrão) | 0,689 | 0,621 | 0,529 | 0,571 |
-| 0,274 (ajustado) | 0,561 | 0,469 | **0,899** | **0,616** |
-
-Com o limiar ajustado, a rede encontrou 248 das 276 lesões malignas. Em troca, sinalizou como suspeitas 281 das 428 lesões benignas.
-
-![Matriz de confusão e curva ROC da CNN](outputs/cnn/matriz_confusao_roc_cnn.png)
+**Com as curvas de treinamento (`curvas_treinamento.png`):**
 
 ![Curvas de treinamento](outputs/cnn/curvas_treinamento.png)
 
-As curvas de treino e validação andam juntas, sem *overfitting*, e a AUC de validação ainda subia no fim do treino.
+> "As curvas de treino e de validação andam juntas, então a rede não decorou os dados de treino. E a curva ainda estava subindo no final, o que indica que, com mais treino, o resultado provavelmente melhoraria."
+
+**Com a matriz de confusão e a curva ROC (`matriz_confusao_roc_cnn.png`):**
+
+![Matriz de confusão e curva ROC da CNN](outputs/cnn/matriz_confusao_roc_cnn.png)
+
+> "O resultado foi uma AUC de 0,73 no teste, bem abaixo do modelo tabular. Para não deixar passar câncer, ajustamos o limiar de decisão: a rede passa a classificar como maligno qualquer caso com mais de 27% de probabilidade. Com isso, ela encontrou 90% das lesões malignas. O preço é alto: muitos benignos foram marcados como suspeitos, o que significaria mais exames e biópsias."
+
+**Com o Grad-CAM (`grad_cam.png`):**
 
 ![Grad-CAM](outputs/cnn/grad_cam.png)
 
-O Grad-CAM mostra que, em parte dos casos, a rede olha para a lesão. Em outros, inclusive em erros, ela foca nas bordas do recorte. Por isso a CNN **ainda não é confiável para uso clínico**.
-
-**Por que o resultado é bem inferior ao do modelo tabular?** O modelo tabular recebe medidas já extraídas por especialistas. A CNN precisa aprender sozinha o que observar, a partir de mamografias de filme digitalizadas e com poucos milhares de exemplos.
+> "Por fim, o Grad-CAM, que é o equivalente do SHAP para imagens: ele mostra em que região da imagem a rede prestou atenção. Em alguns casos ela olha para a lesão, como esperado. Mas em vários outros, inclusive nos erros, ela olha para as bordas do recorte, que não têm nada a ver com o diagnóstico. Isso mostra que a rede ainda não é confiável, e foi justamente a interpretação que nos permitiu perceber isso."
 
 ---
 
-## Limitações e uso na prática
+## Bloco 7 — Discussão crítica e encerramento (11:30 – 13:00)
 
-**Como o modelo poderia ser usado:**
-- Como **ferramenta de triagem**, priorizando os exames com maior probabilidade de malignidade para revisão do especialista.
-- Como **segunda opinião**, com a explicação SHAP de cada caso mostrando quais medidas influenciaram a sugestão.
+**Tela:** o relatório técnico, na seção 10, com a tabela que compara os dois modelos.
 
-**Limitações:**
-- O dataset é pequeno (569 pacientes) e vem de uma única instituição. O modelo precisaria ser validado com dados de outros hospitais antes de qualquer uso real.
-- Mesmo com recall de 95%, **2 casos malignos foram classificados como benignos** no teste. Em produção, seria recomendável reduzir o limiar de decisão para priorizar ainda mais o recall, aceitando mais falsos positivos.
-- O modelo depende de medidas já extraídas da imagem. Erros nessa etapa afetam a previsão.
+**Fala:**
 
-> **A decisão final é sempre do médico.** O modelo apoia a análise, mas não a substitui.
-
----
-
-## Entregáveis
-
-- 📓 Notebook da parte extra: `notebooks/extraCnnCbisDdsm.ipynb`
-- 📄 Relatório técnico: `[ADICIONAR LINK OU CAMINHO DO PDF]`
-- 🎥 Vídeo de demonstração: `[ADICIONAR LINK DO YOUTUBE]`
+> "Comparando as duas abordagens: o modelo tabular foi muito melhor. Isso acontece porque ele recebe medidas que especialistas já extraíram do exame, ou seja, a parte mais difícil já foi feita. A rede neural precisa aprender sozinha o que observar, a partir de imagens antigas e com poucos exemplos.
+>
+> E esse modelo pode ser usado na prática? O modelo tabular pode ser testado como ferramenta de apoio, por exemplo para colocar no topo da fila os exames com maior chance de malignidade, ou como uma segunda opinião, mostrando ao médico a probabilidade junto com a explicação do SHAP.
+>
+> Mas há limitações importantes. O dataset é pequeno e vem de um único hospital, então o modelo precisaria ser validado com dados de outros lugares. E mesmo com 95% de recall, ele deixou passar dois casos malignos. Por isso, em nenhum momento o modelo decide sozinho. Quem tem a palavra final é sempre o médico.
+>
+> Já a rede neural ainda não está pronta para uso, mas mostrou o caminho para as próximas fases: treinar por mais tempo, usar imagens com mais resolução e garantir que ela olhe para a lesão.
+>
+> O código completo, o Dockerfile, os resultados e o relatório técnico estão no repositório do GitHub, que está no link da entrega. Obrigado!"
 
 ---
 
-## Autores
+## Depois de gravar
 
-- `[NOME COMPLETO — RM]`
-- `[NOME COMPLETO — RM]`
+- [ ] Conferir se o vídeo tem menos de 15 minutos
+- [ ] Enviar ao YouTube como **Não listado**
+- [ ] Colocar o link do vídeo no README e no relatório
+- [ ] Exportar o relatório em PDF com os links do repositório e do vídeo
 
 ---
 
-**Tecnologias:** Python 3.14 · pandas · scikit-learn · SHAP · matplotlib · seaborn · Docker · TensorFlow/Keras · Google Colab
+## Números para ter à mão
+
+| Item | Valor |
+|---|---|
+| Pacientes (Wisconsin) | 569 — 357 benignos, 212 malignos |
+| Divisão | 341 treino · 114 validação · 114 teste |
+| Recall na validação | Regressão Logística 97,7% · Random Forest 95,3% |
+| Teste — acurácia | 97,4% |
+| Teste — recall (maligno) | 95,2% (40 de 42) |
+| Teste — erros | 2 falsos negativos · 1 falso positivo |
+| CNN — imagens | 3.566 recortes (2.277 treino · 585 validação · 704 teste) |
+| CNN — AUC no teste | 0,73 |
+| CNN — limiar ajustado | 0,274 → recall 89,9% (248 de 276) |
