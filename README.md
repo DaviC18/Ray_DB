@@ -16,6 +16,7 @@ O objetivo é construir a base de um sistema de **apoio ao diagnóstico** para u
 - [Fluxo do pipeline](#fluxo-do-pipeline)
 - [Resultados](#resultados)
 - [Interpretação do modelo](#interpretação-do-modelo)
+- [Extra: CNN com mamografias](#extra-cnn-com-mamografias-cbis-ddsm)
 - [Limitações e uso na prática](#limitações-e-uso-na-prática)
 - [Entregáveis](#entregáveis)
 - [Autores](#autores)
@@ -52,7 +53,10 @@ O arquivo já está incluído no repositório em `data/data.csv`. Caso precise b
 .
 ├── data/
 │   └── data.csv            # Dataset
+├── notebooks/
+│   └── extraCnnCbisDdsm.ipynb  # Parte extra: CNN com mamografias (Google Colab)
 ├── outputs/                # Gráficos e resultados gerados pela execução
+│   └── cnn/                # Resultados da parte extra
 ├── main.py                 # Pipeline completo (EDA → modelagem → avaliação → SHAP)
 ├── requirements.txt        # Dependências Python
 ├── Dockerfile              # Imagem para execução em container
@@ -220,6 +224,52 @@ O gráfico mostra, para um único paciente, quais variáveis empurraram a previs
 
 ---
 
+## Extra: CNN com mamografias (CBIS-DDSM)
+
+Como parte bônus, o mesmo diagnóstico (benigno ou maligno) foi feito **diretamente a partir de imagens de mamografia**, com uma rede neural convolucional.
+
+**Dataset:** [CBIS-DDSM — Kaggle](https://www.kaggle.com/datasets/awsaf49/cbis-ddsm-breast-cancer-image-dataset/data). Foram usados 3.566 recortes de lesões (massas e calcificações), com 40,8% de casos malignos.
+
+**Como executar:** abra `notebooks/extraCnnCbisDdsm.ipynb` no [Google Colab](https://colab.research.google.com), ative a GPU (*Ambiente de execução → Alterar o tipo de ambiente de execução → GPU T4*) e clique em *Executar tudo*. O próprio notebook baixa o dataset pelo `kagglehub`.
+
+**Abordagem:**
+- *Transfer learning* com a **EfficientNetB0** pré-treinada no ImageNet, com imagens de 224×224 e aumento de dados.
+- Treino em duas fases: primeiro só o classificador final e depois o ajuste fino das últimas 40 camadas.
+- Separação treino / validação **por paciente** e teste com a divisão oficial do dataset.
+- Limiar de decisão escolhido na validação para garantir recall ≥ 85% para malignos.
+- Interpretação com **Grad-CAM**.
+
+| Conjunto | Imagens | Malignos |
+|---|---|---|
+| Treino | 2.277 | 41,2% |
+| Validação | 585 | 41,5% |
+| Teste | 704 | 39,2% |
+
+### Resultados no teste
+
+AUC: **0,728**
+
+| Limiar | Acurácia | Precisão (maligno) | Recall (maligno) | F1 (maligno) |
+|---|---|---|---|---|
+| 0,5 (padrão) | 0,689 | 0,621 | 0,529 | 0,571 |
+| 0,274 (ajustado) | 0,561 | 0,469 | **0,899** | **0,616** |
+
+Com o limiar ajustado, a rede encontrou 248 das 276 lesões malignas. Em troca, sinalizou como suspeitas 281 das 428 lesões benignas.
+
+![Matriz de confusão e curva ROC da CNN](outputs/cnn/matriz_confusao_roc_cnn.png)
+
+![Curvas de treinamento](outputs/cnn/curvas_treinamento.png)
+
+As curvas de treino e validação andam juntas, sem *overfitting*, e a AUC de validação ainda subia no fim do treino.
+
+![Grad-CAM](outputs/cnn/grad_cam.png)
+
+O Grad-CAM mostra que, em parte dos casos, a rede olha para a lesão. Em outros, inclusive em erros, ela foca nas bordas do recorte. Por isso a CNN **ainda não é confiável para uso clínico**.
+
+**Por que o resultado é bem inferior ao do modelo tabular?** O modelo tabular recebe medidas já extraídas por especialistas. A CNN precisa aprender sozinha o que observar, a partir de mamografias de filme digitalizadas e com poucos milhares de exemplos.
+
+---
+
 ## Limitações e uso na prática
 
 **Como o modelo poderia ser usado:**
@@ -237,6 +287,7 @@ O gráfico mostra, para um único paciente, quais variáveis empurraram a previs
 
 ## Entregáveis
 
+- 📓 Notebook da parte extra: `notebooks/extraCnnCbisDdsm.ipynb`
 - 📄 Relatório técnico: `[ADICIONAR LINK OU CAMINHO DO PDF]`
 - 🎥 Vídeo de demonstração: `[ADICIONAR LINK DO YOUTUBE]`
 
@@ -249,4 +300,4 @@ O gráfico mostra, para um único paciente, quais variáveis empurraram a previs
 
 ---
 
-**Tecnologias:** Python 3.14 · pandas · scikit-learn · SHAP · matplotlib · seaborn · Docker
+**Tecnologias:** Python 3.14 · pandas · scikit-learn · SHAP · matplotlib · seaborn · Docker · TensorFlow/Keras · Google Colab

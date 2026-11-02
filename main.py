@@ -46,7 +46,7 @@ def load_data():
             "Verifique se o arquivo está em data/data.csv."
         )
 
-    df = pd.read_csv(DATASET_PATH)
+    df = pd.read_csv(str(DATASET_PATH))
 
     print("\n" + "=" * 60)
     print("INFORMAÇÕES INICIAIS DO DATASET")
@@ -130,7 +130,7 @@ def perform_eda(df):
 
     # Cópia só para os gráficos, com o diagnóstico em texto
     df_plot = df.copy()
-    df_plot["Diagnóstico"] = df_plot["diagnosis"].map({0: "Benigno", 1: "Maligno"})
+    df_plot["Diagnostic"] = df_plot["diagnosis"].map({0: "Benigno", 1: "Malign"})
 
     print("\n" + "=" * 60)
     print("ANÁLISE EXPLORATÓRIA DOS DADOS")
@@ -378,7 +378,7 @@ def train_and_select_model(
 
     best_model_name = max(
         validation_results,
-        key=validation_results.get,
+        key=lambda name: validation_results[name],
     )
 
     best_model = models[best_model_name]
